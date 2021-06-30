@@ -6,16 +6,24 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 // view 엔진
 const nunjucks = require('nunjucks');
+// 로그인 인증을 위한 passport 모듈
+const passport = require('passport');
 
+// create application
+const app = express();
+
+// config들
+const passportConfig = require('./passport'); // passport 폴더를 만들어야한다. ./passport/index.js == ./passport
+passportConfig(); // 패스포트 설정
+// dotenv
 dotenv.config();
+
 
 // router
 const pageRouter = require('./routes/page');
 
-// create application
-const app = express();
 // setting port
-app.set('port', process.env.PORT || 5000);
+app.set('port', process.env.PORT || 8500);
 // setting view engines
 app.set('view engine', 'html');
 // app.set('views', path.join(__dirname, 'views')); // views의 기본 경로를 지정해준다
@@ -46,6 +54,24 @@ app.use(
     },
   })
 );
+// passport 미들웨어 사용하기
+// req 객체에 passport 설정을 심는 미들웨어
+// app.use(passport.initialize());
+// req.session 객체에 passport 정보를 저장하는 미들웨어
+// app.use(passport.session()); // req.session 객체는 express-session이 생성한다.
+
+// 시퀄라이즈 모듈 가져오기
+// MVC(모델영역) - 시퀄라이즈 ORM 객체 참조하기
+const sequelize = require('./models/index').sequelize; // db안에 있는 시퀄라이저객체
+// // 시퀄라이즈 ORM 객체를 이용해 지정한 데이터베이스(MySQL)와 연결하기
+sequelize.sync()
+  .then(()=>{
+    console.log('MySQL 연결 성공!');
+  })
+  .catch((err)=>{
+    console.error(err);
+  })
+
 
 // 라우터 경로
 app.use('/', pageRouter); // 루트는 pageRouter
